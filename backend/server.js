@@ -1,7 +1,10 @@
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
-const uuid = require("uuid/v4");
+import placesRoutes from "./routes/place-routes.js";
+import HttpError from "./models/http-error.js";
+import userRoutes from "./routes/user-routes.js";
+
 const app = express();
 
 app.use(cors());
@@ -12,6 +15,22 @@ app.use((req, res, next) => {
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
   next();
-}); // middleware
+}); // register middleware
 
-app.listen(3001); // start server on port 3001
+app.use("/api/places", placesRoutes);
+app.use("/api/users", userRoutes);
+
+app.use((req, res, next) => {
+  throw new HttpError("Could not find this route.", 404);
+});
+
+// Centralized Error Handling Middleware
+app.use((error, req, res, next) => {
+  if (res.headerSent) {
+    return next(error);
+  }
+  res.status(error.code || 500);
+  res.json({ message: error.message || "An unknown error occurred!" });
+});
+
+app.listen(5000); // start server on port 5000
