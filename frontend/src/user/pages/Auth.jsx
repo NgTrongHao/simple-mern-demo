@@ -14,6 +14,8 @@ import { AuthContext } from "../../shared/context/auth-context";
 export const Auth = () => {
   const auth = useContext(AuthContext);
   const [isLoginMode, setIsLoginMode] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState();
   const [formState, inputHandler, setFormData] = useForm(
     {
       email: {
@@ -47,10 +49,58 @@ export const Auth = () => {
     }
     setIsLoginMode((prev) => !prev);
   };
-  const authSubmitHandler = (event) => {
+  const authSubmitHandler = async (event) => {
     event.preventDefault();
     console.log(formState.inputs);
-    auth.login();
+    if (isLoginMode) {
+      try {
+        setIsLoading(true);
+        const response = await fetch("http://localhost:5000/api/users/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: formState.inputs.email.value,
+            password: formState.inputs.password.value,
+          }),
+        });
+        const data = await response.json();
+        // Check if the response status is not OK (200-299)
+        if (!response.ok) {
+          throw new Error(data.message || "Something went wrong!");
+        }
+        setIsLoading(false);
+        auth.login();
+      } catch (error) {
+        setError(error.message || "Something went wrong!");
+        alert(error);
+      }
+    } else {
+      try {
+        const response = await fetch("http://localhost:5000/api/users/signup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: formState.inputs.name.value,
+            email: formState.inputs.email.value,
+            password: formState.inputs.password.value,
+          }),
+        });
+        const data = await response.json();
+        // Check if the response status is not OK (200-299)
+        if (!response.ok) {
+          throw new Error(data.message || "Something went wrong!");
+        }
+        setIsLoading(false);
+        auth.login();
+      } catch (error) {
+        setError(error.message || "Something went wrong!");
+        alert(error);
+      }
+    }
   };
   return (
     <>
