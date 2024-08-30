@@ -4,7 +4,10 @@ import cors from "cors";
 import placesRoutes from "./routes/place-routes.js";
 import HttpError from "./models/http-error.js";
 import userRoutes from "./routes/user-routes.js";
+import mongoose from "mongoose";
+import { configDotenv } from "dotenv";
 
+configDotenv();
 const app = express();
 
 app.use(cors());
@@ -33,4 +36,11 @@ app.use((error, req, res, next) => {
   res.json({ message: error.message || "An unknown error occurred!" });
 });
 
-app.listen(5000); // start server on port 5000
+mongoose
+  .connect(process.env.MONGODB_URL)
+  .then(() => {
+    app.listen(5000); // start server on port 5000
+  })
+  .catch((err) => {
+    console.log(err);
+  });
